@@ -88,8 +88,8 @@ void follow_tape_normal(){
     while(detection_state == FOLLOWING_TAPE){
         kp = knob(6) / 4;
         kd = knob(7) / 4;
-        left = digitalRead(3);
-        right = digitalRead(4);
+        left = digitalRead(LEFT_TAPEFOLLOWER);
+        right = digitalRead(RIGHT_TAPEFOLLOWER);
      
         if ((left)&&(right)) {
             error = 0;
@@ -136,7 +136,7 @@ void follow_tape_normal(){
 			con = -MAX_GAIN;
 		}
 		
-        if (c==30){
+        if (c==150){
             LCD.clear();
             LCD.print("P");
             LCD.print(kp);
@@ -190,8 +190,8 @@ void follow_tape_intersection(){
 
         kp=knob(6) / 4;
         kd = knob(7) / 4;
-        left = digitalRead(3);
-        right = digitalRead(4);
+        left = digitalRead(LEFT_TAPEFOLLOWER);
+        right = digitalRead(RIGHT_TAPEFOLLOWER);
      
         if ((left)&&(right)) {
             error = 0;
@@ -274,7 +274,7 @@ void turn(int DIRECTION){
             motor.speed(1,-TURN_SPEED);
 
             
-            delay(20000/MOTOR_SPEED);                
+            delay(20000/TURN_SPEED);                
             while((millis() - initial_turn_timer) < TURN_TIMER){
                 bool is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
 
@@ -294,7 +294,7 @@ void turn(int DIRECTION){
             motor.speed(1,TURN_SPEED);	
 			
 			//Delay a certain amount of time so that we are on white tape when we start again.
-            delay(20000/MOTOR_SPEED);
+            delay(20000/TURN_SPEED);
                 
 			/**
 			Turn for a certain amount of time.

@@ -68,7 +68,7 @@ void setup() {
 }
 
 void loop() {
-   INTERSECTION_TIMER = knob(6)/4
+   INTERSECTION_TIMER = knob(6)/4;
    TURN_TIMER = knob(7);
     
    if(detection_state == FOLLOWING_TAPE){
@@ -365,41 +365,38 @@ void turn_modified(int DIRECTION){
 	
 	initial_turn_timer = millis();
     bool has_turned = false;
+
+    motor.speed(0, TURN_SPEED);
+	motor.speed(1, TURN_SPEED);			
+	delay(20000/TURN_SPEED);
+	
+	if(DIRECTION == RIGHT){
+		motor.speed(0,TURN_SPEED);
+        motor.speed(1,-TURN_SPEED);    
 	}
 
-		motor.speed(0, TURN_SPEED);
-			motor.speed(1, TURN_SPEED);			
-			delay(20000/TURN_SPEED);
-			
-			if(DIRECTION == RIGHT}{
-				motor.speed(0,TURN_SPEED);
-            motor.speed(1,-TURN_SPEED);    
-			}
+	else{
+		motor.speed(0,-TURN_SPEED);
+        motor.speed(1,TURN_SPEED);    
+	}
+    delay(20000/TURN_SPEED);   
+	
+	bool is_on_tape;
+    while((millis() - initial_turn_timer) < TURN_TIMER){
+        is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
 
-			else{
-				motor.speed(0,-TURN_SPEED);
-            motor.speed(1,TURN_SPEED);    
-			}
-            delay(20000/TURN_SPEED);   
-			
-			bool is_on_tape;
-            while((millis() - initial_turn_timer) < TURN_TIMER){
-                is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
+        if(!is_on_tape && has_turned == false){
+            has_turned == true;
+        }
 
-                if(!is_on_tape && has_turned == false){
-                    has_turned == true;
-                }
-
-                if(is_on_tape && has_turned == true){
-                    LCD.clear();
-                    LCD.print("TOO MUCH");
-                
-                }
-            }
-			
-			while(!is_on_tape){
-				is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
-			}
-
-            break;
+        if(is_on_tape && has_turned == true){
+            LCD.clear();
+            LCD.print("TOO MUCH");
+        
+        }
+    }
+	
+	while(!is_on_tape){
+		is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
+	}
 }

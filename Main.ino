@@ -12,8 +12,10 @@ const int ERROR_GAIN = 3;
 const int MAX_GAIN = 150;
 const unsigned int STOP = 69;
 const int TURN_SPEED = 100;
-const unsigned int INTERSECTION_TIMER = 7500 / MOTOR_SPEED;
-const unsigned int TURN_TIMER = 55000 / MOTOR_SPEED;
+const unsigned int INTERSECTION_TIMER = 6500 / TURN_SPEED;
+const unsigned int TURN_TIMER = 45000 / TURN_SPEED;
+const unsigned int LOST_TAPE_TIMER = 300;
+const unsigned int COLLISION_TURN_TIMER = 500;
 
 const unsigned int LEFT_TAPEFOLLOWER = 3;
 const unsigned int RIGHT_TAPEFOLLOWER = 4;
@@ -39,10 +41,11 @@ const unsigned int RANDOM_LOST = 14;
 
 //VARIABLE DECLARATIONS
 volatile unsigned int detection_state = FOLLOWING_TAPE;
-unsigned int navigation_mode = FIXEDPATH_LEFT;
+unsigned int navigation_mode = FIXEDPATH_RIGHT;
 unsigned int turn_number = 0;
 bool tape_is_lost = false;
 int initial_turn_timer;
+int tape_lost_time;
 
 int integral = 0;
 int left;
@@ -64,7 +67,7 @@ void setup() {
   #include <phys253setup.txt>
   LCD.clear();
   LCD.home();
-  randomSeed(analogRead(0));
+  randomSeed(420);
 }
 
 void loop() {
@@ -74,6 +77,10 @@ void loop() {
 
    if(detection_state == INTERSECTION_DETECTED){
         follow_tape_intersection();
+   }
+   
+   if(detection_state == COLLISION_DETECTED){
+	   collision_turn_around();
    }
 
    if(detection_state == STOP){
@@ -104,8 +111,13 @@ void follow_tape_normal(){
         }
         
         if ((!left)&&(!right)){
-    
-            tape_is_lost = true;        
+			
+			if(!tape_is_lost){
+				tape_lost_time = millis();
+			}
+			
+            tape_is_lost = true;       
+				
             if (lerr>0) {
                 error = ERROR_GAIN;
             }
@@ -114,6 +126,16 @@ void follow_tape_normal(){
                 error=-ERROR_GAIN;
             }
         }
+		
+		else{
+			if(tape_is_lost){
+				if((millis() - tape_lost_time) > LOST_TAPE_TIMER){
+					navigation_mode = RANDOM_LOST;
+				}
+			}
+			
+			tape_is_lost = false;
+		}
         
         if (!(error==lerr)){
             recerr=lerr;
@@ -185,7 +207,7 @@ void follow_tape_intersection(){
         }
 
         if(digitalRead(FRONT_INTERSECTION)){
-          //  front_intersection_valid = true; not working yet
+          //  front_intersection_valid = true; not working yet TODO
         }
 
         kp=knob(6) / 4;
@@ -234,25 +256,12 @@ void follow_tape_intersection(){
         lerr=error;
     }
 
-    LCD.clear();
-    
-    if(front_intersection_valid){
-        LCD.write("FRONT");
-    }
-
-    if(left_intersection_valid){
-        LCD.write("LEFT");
-    }
-
-    if(right_intersection_valid){
-        LCD.write("RIGHT");
-    }
-
     turn_number++;
 
-    if(left_intersection_valid){
-        turn(LEFT);
-    }
+	if(tape_is_lost){
+		navigate_random(front_intersection_valid, left_intersection_valid, right_intersection_valid);
+	}
+    navigate(front_intersection_valid, left_intersection_valid, right_intersection_valid);
     detection_state = FOLLOWING_TAPE;
 }
 
@@ -321,7 +330,21 @@ void turn(int DIRECTION){
     }
 }
 
-void turn_random(bool front_intersection_valid, 
+void navigate(bool front_intersection_valid, 
+                bool left_intersection_valid,
+                bool right_intersection_valid){
+	
+	if(navigation_mode == RANDOM_LOST){
+		navigate_random(front_intersection_valid, left_intersection_valid, right_intersection_valid);
+	}
+	
+	if(navigation_mode == FIXEDPATH_RIGHT){
+		navigate_fixedpath_right(front_intersection_valid, left_intersection_valid, right_intersection_valid);
+	}
+	
+}
+
+void navigate_random(bool front_intersection_valid, 
                 bool left_intersection_valid,
                 bool right_intersection_valid){
 
@@ -352,4 +375,39 @@ void turn_random(bool front_intersection_valid,
     }
 }
 
+void navigate_fixedpath_right(bool front_intersection_valid, 
+                bool left_intersection_valid,
+                bool right_intersection_valid){
+	
+	if(turn_number == 1){		
+		turn(RIGHT);
+	}
+	
+	if(turn_number == 2){
+		turn(LEFT);
+	}
+	
+	if(turn_number == 3){
+		turn(LEFT);
+	}
+	
+	if(turn_number == 4){
+		turn(LEFT)
+	}
+	
+	if(turn_number == 5){
+		turn(LEFT);
+	}
+	
+	if(turn_number == 6){
+		turn(RIGHT);
+	}
+	
+	if(turn_number == 7){
+		turn(RIGHT);
+	}
+}
 
+void collision_turn_around(){
+	
+}

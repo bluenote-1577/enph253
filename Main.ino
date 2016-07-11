@@ -8,6 +8,7 @@ const unsigned int FORWARD = 0;
 const unsigned int LEFT = 1;
 const unsigned int RIGHT = 2;
 
+//TUNING PARAMETERS
 const int ERROR_GAIN = 3;
 const int MAX_GAIN = 150;
 const unsigned int STOP = 69;
@@ -17,12 +18,16 @@ const unsigned int TURN_TIMER = 45000 / TURN_SPEED;
 const unsigned int LOST_TAPE_TIMER = 300;
 const unsigned int COLLISION_TURN_TIMER = 500;
 
+//SIGNAL PINS
+const unsigned int LEFT_MOTOR = 0;
+const unsigned int RIGHT_MOTOR = 1;
 const unsigned int LEFT_TAPEFOLLOWER = 3;
 const unsigned int RIGHT_TAPEFOLLOWER = 4;
 const unsigned int FRONT_INTERSECTION = 0;
 const unsigned int LEFT_INTERSECTION = 1;
 const unsigned int RIGHT_INTERSECTION = 2;
 
+//DETECTION STATES
 const unsigned int FOLLOWING_TAPE = 1;
 const unsigned int INTERSECTION_DETECTED = 2;
 const unsigned int PASSENGER_DETECTED_LEFT = 3;
@@ -31,6 +36,7 @@ const unsigned int DROPOFF_DETECTED_LEFT = 5;
 const unsigned int DROPOFF_DETECTED_RIGHT = 6;
 const unsigned int COLLISION_DETECTED = 7;
 
+//NAVIGATION MODES
 const unsigned int START = 8;
 const unsigned int FIXEDPATH_LEFT = 9;
 const unsigned int FIXEDPATH_RIGHT = 10;
@@ -46,7 +52,9 @@ unsigned int turn_number = 0;
 bool tape_is_lost = false;
 int initial_turn_timer;
 int tape_lost_time;
+bool passenger_picked_up = false;
 
+//PID VARIABLES
 int integral = 0;
 int left;
 int right;
@@ -84,8 +92,8 @@ void loop() {
    }
 
    if(detection_state == STOP){
-        motor.speed(0,0);
-        motor.speed(1,0);
+        motor.speed(LEFT_MOTOR,0);
+        motor.speed(RIGHT_MOTOR,0);
    }
 }
 
@@ -173,8 +181,8 @@ void follow_tape_normal(){
         
         c=c+1;
         m=m+1;
-        motor.speed(0,MOTOR_SPEED+con);
-        motor.speed(1,MOTOR_SPEED-con);
+        motor.speed(LEFT_MOTOR,MOTOR_SPEED+con);
+        motor.speed(RIGHT_MOTOR,MOTOR_SPEED-con);
         lerr=error;
 
         if((digitalRead(LEFT_INTERSECTION) ||
@@ -251,8 +259,8 @@ void follow_tape_intersection(){
             
         c=c+1;
         m=m+1;
-        motor.speed(0,MOTOR_SPEED+con);
-        motor.speed(1,MOTOR_SPEED-con);
+        motor.speed(LEFT_MOTOR,MOTOR_SPEED+con);
+        motor.speed(RIGHT_MOTOR,MOTOR_SPEED-con);
         lerr=error;
     }
 
@@ -279,8 +287,8 @@ void turn(int DIRECTION){
 		//See case LEFT: for turning algorithm
         case RIGHT:
         {
-            motor.speed(0,TURN_SPEED);
-            motor.speed(1,-TURN_SPEED);
+            motor.speed(LEFT_MOTOR,TURN_SPEED);
+            motor.speed(RIGHT_MOTOR,-TURN_SPEED);
 
             
             delay(20000/TURN_SPEED);                
@@ -299,8 +307,8 @@ void turn(int DIRECTION){
         case LEFT:
         {
 			//set the left motor to go back.
-            motor.speed(0,-TURN_SPEED);
-            motor.speed(1,TURN_SPEED);	
+            motor.speed(LEFT_MOTOR,-TURN_SPEED);
+            motor.speed(RIGHT_MOTOR,TURN_SPEED);	
 			
 			//Delay a certain amount of time so that we are on white tape when we start again.
             delay(20000/TURN_SPEED);

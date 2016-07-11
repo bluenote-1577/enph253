@@ -2,18 +2,18 @@
 #include <LiquidCrystal.h>
 
 //CONSTANTS
-const unsigned int MOTOR_SPEED = 150;
+const unsigned int MOTOR_SPEED = 130;
 
 const unsigned int FORWARD = 0;
 const unsigned int LEFT = 1;
 const unsigned int RIGHT = 2;
 
 const int ERROR_GAIN = 3;
-const int MAX_GAIN = 200;
+const int MAX_GAIN = 150;
 const unsigned int STOP = 69;
-const int TURN_SPEED = MOTOR_SPEED / 4;
-const unsigned int INTERSECTION_TIMER = 17500 / MOTOR_SPEED;
-const unsigned int TURN_TIMER = 75000 / MOTOR_SPEED;
+const int TURN_SPEED = 100;
+const unsigned int INTERSECTION_TIMER = 7500 / MOTOR_SPEED;
+const unsigned int TURN_TIMER = 55000 / MOTOR_SPEED;
 
 const unsigned int LEFT_TAPEFOLLOWER = 3;
 const unsigned int RIGHT_TAPEFOLLOWER = 4;
@@ -44,6 +44,7 @@ unsigned int turn_number = 0;
 bool tape_is_lost = false;
 int initial_turn_timer;
 
+int integral = 0;
 int left;
 int right;
 int p;
@@ -57,7 +58,7 @@ int recerr;
 int m;
 int con;
 int c;
-
+int ki;
 
 void setup() {
   #include <phys253setup.txt>
@@ -85,7 +86,7 @@ void loop() {
 **/
 void follow_tape_normal(){
     while(detection_state == FOLLOWING_TAPE){
-        kp=knob(6) / 4;
+        kp = knob(6) / 4;
         kd = knob(7) / 4;
         left = digitalRead(3);
         right = digitalRead(4);
@@ -119,10 +120,11 @@ void follow_tape_normal(){
             q=m;
             m=1;
         }
-        
+
+        integral= ki * error + integral;
         p=kp*error;
         d=(int)((float)kd*(float)(error-recerr)/(float)(q+m));
-        con = p+d;
+        con = p+d + integral;
 
 		//Limit the error gain. This is for when we turn, since we rely on this error correction. IF
 		//the gain is too high, it turns at a ridiculous rate.
@@ -157,7 +159,7 @@ void follow_tape_normal(){
         digitalRead(RIGHT_INTERSECTION))){
 			//We don't want to read multiple turns in quick succession.
 			//This happens when a turn overshoots and the turn detectors see stuff again.
-            if((millis() - initial_turn_timer) > 1500){
+            if((millis() - initial_turn_timer) > 2000){
                  detection_state = INTERSECTION_DETECTED;
             }
         }
@@ -268,7 +270,7 @@ void turn(int DIRECTION){
 		//See case LEFT: for turning algorithm
         case RIGHT:
         {
-            motor.speed(0,MOTOR_SPEED);
+            motor.speed(0,TURN_SPEED);
             motor.speed(1,-TURN_SPEED);
 
             
@@ -279,15 +281,6 @@ void turn(int DIRECTION){
                 if(!is_on_tape && has_turned == false){
                     has_turned == true;
                     lerr =1; //this makes the robot turn right more
-
-                    LCD.print("MORE");
-                }
-
-                if(is_on_tape && has_turned == true){
-                    lerr = -1; //this makes the robot turn left more
-                    break;
-
-                    LCD.print("LESS");
                 }
             }
 
@@ -298,7 +291,7 @@ void turn(int DIRECTION){
         {
 			//set the left motor to go back.
             motor.speed(0,-TURN_SPEED);
-            motor.speed(1,MOTOR_SPEED);	
+            motor.speed(1,TURN_SPEED);	
 			
 			//Delay a certain amount of time so that we are on white tape when we start again.
             delay(20000/MOTOR_SPEED);
@@ -314,15 +307,6 @@ void turn(int DIRECTION){
                 if(!is_on_tape && has_turned == false){
                     has_turned == true;
                     lerr = -1; //this makes the robot turn left more
-
-                    LCD.print("MORE");
-                }
-
-                if(is_on_tape && has_turned == true){
-                    lerr = +1; //this makes the robot turn more more
-                    break;
-
-                    LCD.print("LESS");
                 }
             }
 

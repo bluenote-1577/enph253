@@ -2,45 +2,45 @@
 #include <LiquidCrystal.h>
 
 //CONSTANTS
-const unsigned int MOTOR_SPEED = 130;
+const unsigned long MOTOR_SPEED = 160;
 
-const unsigned int FORWARD = 0;
-const unsigned int LEFT = 1;
-const unsigned int RIGHT = 2;
+const unsigned long FORWARD = 0;
+const unsigned long LEFT = 1;
+const unsigned long RIGHT = 2;
 
 const int ERROR_GAIN = 3;
-const int MAX_GAIN = 150;
-const unsigned int STOP = 69;
-const int TURN_SPEED = 100;
-unsigned int INTERSECTION_TIMER = 7500 / MOTOR_SPEED;
-unsigned int TURN_TIMER = 55000 / MOTOR_SPEED;
+const int MAX_GAIN = 170;
+const unsigned long STOP = 69;
+const int TURN_SPEED = 120;
+unsigned long INTERSECTION_TIMER = 7500 / MOTOR_SPEED;
+unsigned long TURN_TIMER = 55000 / MOTOR_SPEED;
 
-const unsigned int LEFT_TAPEFOLLOWER = 3;
-const unsigned int RIGHT_TAPEFOLLOWER = 4;
-const unsigned int FRONT_INTERSECTION = 0;
-const unsigned int LEFT_INTERSECTION = 1;
-const unsigned int RIGHT_INTERSECTION = 2;
+const unsigned long LEFT_TAPEFOLLOWER = 3;
+const unsigned long RIGHT_TAPEFOLLOWER = 4;
+const unsigned long FRONT_INTERSECTION = 0;
+const unsigned long LEFT_INTERSECTION = 1;
+const unsigned long RIGHT_INTERSECTION = 2;
 
-const unsigned int FOLLOWING_TAPE = 1;
-const unsigned int INTERSECTION_DETECTED = 2;
-const unsigned int PASSENGER_DETECTED_LEFT = 3;
-const unsigned int PASSENGER_DETECTED_RIGHT = 4;
-const unsigned int DROPOFF_DETECTED_LEFT = 5;
-const unsigned int DROPOFF_DETECTED_RIGHT = 6;
-const unsigned int COLLISION_DETECTED = 7;
+const unsigned long FOLLOWING_TAPE = 1;
+const unsigned long INTERSECTION_DETECTED = 2;
+const unsigned long PASSENGER_DETECTED_LEFT = 3;
+const unsigned long PASSENGER_DETECTED_RIGHT = 4;
+const unsigned long DROPOFF_DETECTED_LEFT = 5;
+const unsigned long DROPOFF_DETECTED_RIGHT = 6;
+const unsigned long COLLISION_DETECTED = 7;
 
-const unsigned int START = 8;
-const unsigned int FIXEDPATH_LEFT = 9;
-const unsigned int FIXEDPATH_RIGHT = 10;
-const unsigned int FIXEDPATH_AFTERDROPOFF_LEFT = 11;
-const unsigned int FIXEDPATH_AFTERDROPOFF_RIGHT = 12;
-const unsigned int RANDOM_TODROPOFF = 13;
-const unsigned int RANDOM_LOST = 14;
+const unsigned long START = 8;
+const unsigned long FIXEDPATH_LEFT = 9;
+const unsigned long FIXEDPATH_RIGHT = 10;
+const unsigned long FIXEDPATH_AFTERDROPOFF_LEFT = 11;
+const unsigned long FIXEDPATH_AFTERDROPOFF_RIGHT = 12;
+const unsigned long RANDOM_TODROPOFF = 13;
+const unsigned long RANDOM_LOST = 14;
 
 //VARIABLE DECLARATIONS
-volatile unsigned int detection_state = FOLLOWING_TAPE;
-unsigned int navigation_mode = FIXEDPATH_LEFT;
-unsigned int turn_number = 0;
+volatile unsigned long detection_state = FOLLOWING_TAPE;
+unsigned long navigation_mode = FIXEDPATH_LEFT;
+unsigned long turn_number = 0;
 bool tape_is_lost = false;
 int initial_turn_timer;
 
@@ -68,11 +68,15 @@ void setup() {
 }
 
 void loop() {
-   INTERSECTION_TIMER = knob(6)/4;
-   TURN_TIMER = knob(7);
-    
+
    if(detection_state == FOLLOWING_TAPE){
-        follow_tape_normal();
+	   if (turn_number == 2) {
+		   detection_state = STOP;
+	   }
+
+	   else {
+		   follow_tape_normal();
+	   }
    }
 
    if(detection_state == INTERSECTION_DETECTED){
@@ -89,8 +93,10 @@ void loop() {
 **/
 void follow_tape_normal(){
     while(detection_state == FOLLOWING_TAPE){
-        kp = 50;
-        kd = 30;
+        INTERSECTION_TIMER = knob(6)/4;
+        TURN_TIMER = knob(7);
+        kp = 100;
+        kd = 50;
         left = digitalRead(LEFT_TAPEFOLLOWER);
         right = digitalRead(RIGHT_TAPEFOLLOWER);
      
@@ -158,7 +164,7 @@ void follow_tape_normal(){
         digitalRead(RIGHT_INTERSECTION))){
             //We don't want to read multiple turns in quick succession.
             //This happens when a turn overshoots and the turn detectors see stuff again.
-            if((millis() - initial_turn_timer) > 2000){
+            if((millis() - initial_turn_timer) > 2750){
                  detection_state = INTERSECTION_DETECTED;
             }
 
@@ -209,8 +215,7 @@ void follow_tape_intersection(){
         }
         
         if ((!left)&&(!right)){
-    
-            tape_is_lost = true;        
+       
             if (lerr>0) {
                 error = ERROR_GAIN;
             }
@@ -239,22 +244,22 @@ void follow_tape_intersection(){
 
 // UNCOMMENT THIS AND COMMENT THE BELOW CODE TO TEST INTERSECTION DETECTION.
 ///////////////////////////////////////////////
-    LCD.clear();
-    
-    if(front_intersection_valid){
-        LCD.write("FRONT");
-    }
-
-    if(left_intersection_valid){
-        LCD.write("LEFT");
-    }
-
-    if(right_intersection_valid){
-        LCD.write("RIGHT");
-    }
-
-    turn_number++;
-    detection_state = STOP;
+//    LCD.clear();
+//    
+//    if(front_intersection_valid){
+//        LCD.write("FRONT");
+//    }
+//
+//    if(left_intersection_valid){
+//        LCD.write("LEFT");
+//    }
+//
+//    if(right_intersection_valid){
+//        LCD.write("RIGHT");
+//    }
+//
+//    turn_number++;
+//    detection_state = STOP;
 //////////////////////////////////////////////	
 
 //Just for turning and stuff
@@ -270,16 +275,21 @@ void follow_tape_intersection(){
 ///////////////////////////////////////////////////////
 
 //UNCOMMENT THIS FOR TESTING TURNING.
-/* 	LCD.clear();
+ 	LCD.clear();
 	
 	if(left_intersection_valid){
 		turn_modified(LEFT);
 	}
 	
-	if(right_intersection_valid){
+	else if(right_intersection_valid){
 		turn_modified(RIGHT);
 	}
-	///////////////////// */
+
+   detection_state = FOLLOWING_TAPE;
+
+   turn_number++;
+   LCD.print("TURNED");
+///////////////////// 
 }
 
 /**
@@ -359,44 +369,39 @@ void turn(int DIRECTION){
 
 void turn_modified(int DIRECTION){
 	
-	if(DIRECTION == FORWARD){
-		return;
-	}
-	
-	initial_turn_timer = millis();
+ if(DIRECTION == FORWARD){
+        return;
+    }
+    
+    initial_turn_timer = millis();
     bool has_turned = false;
 
     motor.speed(0, TURN_SPEED);
-	motor.speed(1, TURN_SPEED);			
-	delay(20000/TURN_SPEED);
-	
-	if(DIRECTION == RIGHT){
-		motor.speed(0,TURN_SPEED);
+    motor.speed(1, TURN_SPEED);         
+   // delay(50);
+    
+    if(DIRECTION == RIGHT){
+        motor.speed(0,TURN_SPEED);
         motor.speed(1,-TURN_SPEED);    
-	}
+    }
 
-	else{
-		motor.speed(0,-TURN_SPEED);
+    else{
+        motor.speed(0,-TURN_SPEED);
         motor.speed(1,TURN_SPEED);    
-	}
-    delay(20000/TURN_SPEED);   
-	
-	bool is_on_tape;
-    while((millis() - initial_turn_timer) < TURN_TIMER){
-        is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
+    } 
+    
+    bool is_on_tape = true;
+    while(is_on_tape){
+        is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) && digitalRead(RIGHT_TAPEFOLLOWER);
 
         if(!is_on_tape && has_turned == false){
             has_turned == true;
         }
-
-        if(is_on_tape && has_turned == true){
-            LCD.clear();
-            LCD.print("TOO MUCH");
-        
-        }
     }
-	
-	while(!is_on_tape){
-		is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
-	}
+
+    delay(TURN_TIMER);
+    
+    while(!is_on_tape){
+        is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) && digitalRead(RIGHT_TAPEFOLLOWER);
+    }
 }

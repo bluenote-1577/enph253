@@ -15,7 +15,7 @@ const int TURN_SPEED = 100;
 const unsigned int INTERSECTION_TIMER = 6500 / TURN_SPEED;
 const unsigned int TURN_TIMER = 45000 / TURN_SPEED;
 const unsigned int LOST_TAPE_TIMER = 300;
-const unsigned int COLLISION_TURN_TIMER = 500;
+unsigned int COLLISION_TURN_TIMER = 950;
 
 const unsigned int LEFT_MOTOR = 0;
 const unsigned int RIGHT_MOTOR = 1;
@@ -42,7 +42,7 @@ const unsigned int RANDOM_TODROPOFF = 13;
 const unsigned int RANDOM_LOST = 14;
 
 //VARIABLE DECLARATIONS
-volatile unsigned int detection_state = FOLLOWING_TAPE;
+volatile unsigned int detection_state = COLLISION_DETECTED;
 unsigned int navigation_mode = FIXEDPATH_LEFT;
 unsigned int turn_number = 0;
 bool tape_is_lost = false;
@@ -72,17 +72,9 @@ void setup() {
   LCD.clear();
   LCD.home();
   randomSeed(analogRead(0));
-  
-  collision_testing_timer = 1000;
 }
 
-void loop() {
-   COLLISION)TURN_TIMER = knob(6)/4;
-   
-   if(collision_testing_timer < millis()){
-	   detection_state == COLLISION_DETECTED;
-   }
-    
+void loop() {    
    if(detection_state == FOLLOWING_TAPE){
         follow_tape_normal();
    }
@@ -102,6 +94,11 @@ void loop() {
 **/
 void follow_tape_normal(){
     while(detection_state == FOLLOWING_TAPE){
+        
+       COLLISION_TURN_TIMER = 2500;
+       
+       detection_state == COLLISION_DETECTED;
+        
         kp = 50;
         kd = 30;
         left = digitalRead(LEFT_TAPEFOLLOWER);
@@ -154,10 +151,8 @@ void follow_tape_normal(){
         
         if (c==150){
             LCD.clear();
-            LCD.print("INT ");
-            LCD.print(INTERSECTION_TIMER);
+            LCD.print(COLLISION_TURN_TIMER);
             LCD.print("TURN ");
-            LCD.print(TURN_TIMER);
             c = 0;
         }
         
@@ -166,19 +161,6 @@ void follow_tape_normal(){
         motor.speed(0,MOTOR_SPEED+con);
         motor.speed(1,MOTOR_SPEED-con);
         lerr=error;
-
-        if((digitalRead(LEFT_INTERSECTION) ||
-        digitalRead(RIGHT_INTERSECTION))){
-            //We don't want to read multiple turns in quick succession.
-            //This happens when a turn overshoots and the turn detectors see stuff again.
-            if((millis() - initial_turn_timer) > 2000){
-                 detection_state = INTERSECTION_DETECTED;
-            }
-
-            else{
-                LCD.print("FALSE TURN");
-            }
-        }
     }
 }
 
@@ -188,23 +170,31 @@ void collision_turn_around(){
 	motor.speed(RIGHT_MOTOR,0);
 	
 	int initial_timer = millis();
-	bool is_on_tape;
+	bool is_on_tape = true;
 	
-	while((millis() - initial_timer) < COLLISION_TURN_TIMER)){
-		motor.speed(LEFT_MOTOR, -TURN_SPEED);
-		motor.speed(RIGHT_MOTOR, -TURN_SPEED/2);
+	while((millis() - initial_timer) < COLLISION_TURN_TIMER){
+		motor.speed(LEFT_MOTOR, -TURN_SPEED * 2 );
+		motor.speed(RIGHT_MOTOR,0);
 	}
-	
+
+     motor.speed(LEFT_MOTOR,0);
+     motor.speed(RIGHT_MOTOR, TURN_SPEED * 2);
+
+    is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
+    
+    while(is_on_tape){
+        is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
+    }
+
+    delay(250);
+    
 	while(!is_on_tape){
 		is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
-		
-		motor.speed(LEFT_MOTOR, TURN_SPEED/2);
-		motor.speed(RIGHT_MOTOR, TURN_SPEED);
 	}
 	
 	if(!passenger_picked_up){
 		navigation_mode = RANDOM_LOST;
 	}
-	
+
 	detection_state = STOP;
 }

@@ -28,7 +28,7 @@ void turn(int DIRECTION) {
 		motor.speed(1, TURN_SPEED);
 	}
 
-	delay(250);
+	delay(100);
 
 	bool is_on_tape = true;
 	while (is_on_tape) {

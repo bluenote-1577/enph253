@@ -13,20 +13,21 @@ const unsigned long MOTOR_SPEED = 150;
 //TUNING PARAMETERS
 const int ERROR_GAIN = 3;
 const int MAX_GAIN = 150;
-const unsigned long INTERSECTION_TIMER = 75;
+const unsigned long INTERSECTION_TIMER = 150;
 const unsigned long TURN_TIMER = 300;
-const unsigned long LOST_TAPE_TIMER = 700;
+const unsigned long LOST_TAPE_TIMER = 1200;
 const unsigned long COLLISION_TURN_TIMER = 950;
-const unsigned long INTERSECTION_WAIT_TIMER = 1000;
+const unsigned long INTERSECTION_WAIT_TIMER = 1400;
 
 //SIGNAL PINS
 const unsigned long LEFT_MOTOR = 0;
 const unsigned long RIGHT_MOTOR = 1;
-const unsigned long LEFT_TAPEFOLLOWER = 3;
-const unsigned long RIGHT_TAPEFOLLOWER = 4;
-const unsigned long FRONT_INTERSECTION = 0;
-const unsigned long LEFT_INTERSECTION = 1;
-const unsigned long RIGHT_INTERSECTION = 2;
+const unsigned long LEFT_TAPEFOLLOWER = 1;
+const unsigned long RIGHT_TAPEFOLLOWER = 2;
+const unsigned long LEFT_INTERSECTION = 3;
+const unsigned long RIGHT_INTERSECTION = 4;
+const unsigned long FRONT_INTERSECTION1 = 5;
+const unsigned long FRONT_INTERSECTION2 = 7;
 
 //DETECTION STATES
 const unsigned long FOLLOWING_TAPE = 1;

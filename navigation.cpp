@@ -9,26 +9,30 @@ void Navigation::navigate(bool front_intersection_valid,
 	bool right_intersection_valid,
 	volatile unsigned long &detection_state) {
 
+	LCD.clear();
+
+	this->front_intersection_valid = front_intersection_valid;
+	this->left_intersection_valid = left_intersection_valid;
+	this->right_intersection_valid = right_intersection_valid;
+
 	bool correct_turn;
 	turn_number++;
 
 	if (navigation_mode == RANDOM_LOST) {
-		navigate_random(front_intersection_valid, left_intersection_valid, right_intersection_valid);
+		navigate_random();
 	}
 
 	else if (navigation_mode == FIXEDPATH_RIGHT) {
-		correct_turn = navigate_fixedpath_right(front_intersection_valid, 
-			left_intersection_valid, right_intersection_valid);
+		correct_turn = navigate_fixedpath_right();
 	}
 
 	else if (navigation_mode == FIXEDPATH_LEFT) {
-		correct_turn = navigate_fixedpath_left(front_intersection_valid, 
-			left_intersection_valid, right_intersection_valid);
+		correct_turn = navigate_fixedpath_left();
 	}
 
 	if (!correct_turn) {
 		LCD.clear();
-		LCD.print("INTERSECTION PROBLEM");
+		LCD.print("INVALID ");
 		LCD.print(turn_number);
 		detection_state = STOP;
 	}
@@ -45,11 +49,10 @@ void Navigation::navigate(bool front_intersection_valid,
 
 	intersection_turn_timer = millis();
 
+	LCD.print("DONE");
 }
 
-void Navigation::navigate_random(bool front_intersection_valid,
-	bool left_intersection_valid,
-	bool right_intersection_valid) {
+void Navigation::navigate_random(){
 
 	//initiate random turning
 	int rand = random(0, 3);
@@ -78,98 +81,95 @@ void Navigation::navigate_random(bool front_intersection_valid,
 	}
 }
 
-bool Navigation::navigate_fixedpath_right(bool front_intersection_valid,
-	bool left_intersection_valid,
-	bool right_intersection_valid) {
+bool Navigation::navigate_fixedpath_right(){
 
 	if (turn_number == 1) {
 		turn(RIGHT);
-		return validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-			true, false, true);
+		return validate(true, false, true);
 	}
 
-	if (turn_number == 2) {
+	else if (turn_number == 2) {
 		turn(LEFT);
-		return validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-			true, true, true);
+		return validate(true, true, true);
 	}
 
-	if (turn_number == 3) {
+	else if (turn_number == 3) {
 		turn(LEFT);
-		/*	validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-		false, true, true); TODO*/
-		return true;
+		validate(false, true, true);
 	}
 
 	if (turn_number == 4) {
 		turn(LEFT);
-		/*validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-		false, true, false); TODO*/
-		return true;
+		validate(false, true, false);
 	}
 
 	if (turn_number == 5) {
 		turn(LEFT);
-		return validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-			true, true, false);
+		return validate(true, true, false);
 	}
 
 	if (turn_number == 6) {
 		turn(RIGHT);
-		return validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-			true, true, true);
+		return validate(true, true, true);
 	}
 
 	if (turn_number == 7) {
 		turn(RIGHT);
-		return validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-			true, false, true);
+		return validate(true, false, true);
 	}
 
 	if (turn_number == 8) {
-		LCD.print("RIGHT PATH DONE");
-		return false;
+		turn(RIGHT);
+		return validate(false, true, true); 
 	}
 }
 
-bool Navigation::navigate_fixedpath_left(bool front_intersection_valid,
-	bool left_intersection_valid,
-	bool right_intersection_valid) {
+bool Navigation::navigate_fixedpath_left() {
 
 	if (turn_number == 1) {
 		turn(LEFT);
-		return validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-			true, true, false);
+		return validate(true, true, false);
 	}
 
 	else if (turn_number == 2) {
 		turn(RIGHT);
-		return validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-			true, true, true);
+		return validate(true, true, true);
 	}
 
 	else if (turn_number == 3) {
 		turn(RIGHT);
-		return validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-			false, true, true);
+		return validate(false, true, true); 
 	}
 
 	else if (turn_number == 4) {
-		turn(LEFT);
-		return validate(front_intersection_valid, left_intersection_valid, right_intersection_valid,
-			false, false, true);
+		turn(RIGHT);
+		return validate(false, false, true); 
 	}
 
 	else if (turn_number == 5) {
-		turn(LEFT);
-		LCD.print("LEFT PATH DONE");
-		return false;
+		turn(RIGHT);
+		return validate(true, false, true);
 	}
+
+	else if (turn_number == 6) {
+		turn(LEFT);
+		return validate(true, true, true);
+	}
+
+	else if (turn_number == 7) {
+		turn(LEFT);
+		return validate(true, true, false);
+	}
+
+	else if (turn_number == 8) {
+		turn(LEFT);
+		return validate(false, true, true); 
+	}
+
+	else return false;
 }
 
-bool Navigation::validate(bool front_intersection_valid,
-	bool left_intersection_valid,
-	bool right_intersection_valid,
+bool Navigation::validate(
 	bool front_should_be_valid,
 	bool left_should_be_valid,
 	bool right_should_be_valid) {
@@ -187,4 +187,31 @@ bool Navigation::validate(bool front_intersection_valid,
 	}
 
 	return true;
+}
+
+bool Navigation::should_turn_around() {
+
+	bool should_collide = false;
+
+	if (navigation_mode = FIXEDPATH_LEFT) {
+		if (turn_number == 7) {
+			should_collide = true;
+		}
+
+		else if (turn_number == 8) {
+			should_collide = true;
+		}
+	}
+
+	else if (navigation_mode = FIXEDPATH_RIGHT) {
+		if (turn_number == 7) {
+			should_collide = true;
+		}
+
+		else if (turn_number == 8) {
+			should_collide = true;
+		}
+	}
+
+	return should_collide;
 }

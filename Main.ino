@@ -43,7 +43,7 @@ void loop() {
 	}
    
 	if(detection_state == COLLISION_DETECTED){
-	   collision_turn_around();
+		collision_detected();
 	}
 
 	if(detection_state == STOP){
@@ -55,11 +55,12 @@ void loop() {
 /** State function for following tape.
 **/
 void follow_tape_normal(){
+	tape_lost_time - millis(); //restart the timer
+
     while(detection_state == FOLLOWING_TAPE){
 
-		if (startbutton()) {
-			collision_turn_around();
-			detection_state = STOP;
+		if (!digitalRead(0)) {
+			detection_state = COLLISION_DETECTED;
 		}
 
         kp = knob(6) / 4;
@@ -97,15 +98,14 @@ void follow_tape_normal(){
         }
 		
 		else{
-			if(tape_is_lost){
-				if((unsigned long)(millis() - tape_lost_time) > LOST_TAPE_TIMER){
-				//	navigation_mode = RANDOM_LOST;
+			if (tape_is_lost) {
+				if ((unsigned long)(millis() - tape_lost_time) > LOST_TAPE_TIMER) {
+					//	navigation_mode = RANDOM_LOST;
 					LCD.clear();
-                    LCD.print("LOST");
+					LCD.print("LOST");
+					//detection_state = STOP; // TODO REMOVE
 				}
-			}
-			
-			else {
+
 				tape_is_lost = false;
 			}
 		}
@@ -156,7 +156,6 @@ void follow_tape_normal(){
 			//This happens when a turn overshoots and the turn detectors see stuff again.
             if((unsigned long)(millis() - navigation.intersection_turn_timer) > INTERSECTION_WAIT_TIMER ){
                  detection_state = INTERSECTION_DETECTED;
-				 LCD.print(" INT ");
             }
         }
     }
@@ -180,9 +179,15 @@ void follow_tape_intersection(){
             right_intersection_valid = true;
         }
 
-        if(digitalRead(FRONT_INTERSECTION)){
-          //  front_intersection_valid = true; not working yet TODO
+		bool straight_not_possible = !(digitalRead(FRONT_INTERSECTION1) || digitalRead(FRONT_INTERSECTION2));
+
+        if (straight_not_possible){
+			front_intersection_valid = false;
         }
+
+		else {
+			front_intersection_valid = true;
+		}
 
         kp= knob(6) / 4;
         kd = knob(7) / 4;
@@ -230,5 +235,26 @@ void follow_tape_intersection(){
     }
 
     navigation.navigate(front_intersection_valid, left_intersection_valid, right_intersection_valid, detection_state);
+}
+
+void collision_detected() {
+	LCD.clear();
+	LCD.print("TURNING");
+
+	collision_turn_around();
+
+	if (!navigation.should_turn_around()) {
+		navigation.navigation_mode = RANDOM_LOST;
+		LCD.clear();
+		LCD.print("TURN AROUND FALSE");
+	}
+
+	else {
+		LCD.clear();
+		LCD.print("TURN AROUND TRUE");
+	}
+
+	detection_state = STOP;
+	//detection_state = FOLLOWING_TAPE;
 }
 

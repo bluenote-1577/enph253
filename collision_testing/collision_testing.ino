@@ -1,48 +1,10 @@
 #include <phys253.h>
 #include <LiquidCrystal.h>
-
-//CONSTANTS
-const unsigned int MOTOR_SPEED = 130;
-
-const unsigned int FORWARD = 0;
-const unsigned int LEFT = 1;
-const unsigned int RIGHT = 2;
-
-const int ERROR_GAIN = 3;
-const int MAX_GAIN = 150;
-const unsigned int STOP = 69;
-const int TURN_SPEED = 100;
-const unsigned int INTERSECTION_TIMER = 6500 / TURN_SPEED;
-const unsigned int TURN_TIMER = 45000 / TURN_SPEED;
-const unsigned int LOST_TAPE_TIMER = 300;
-unsigned int COLLISION_TURN_TIMER = 950;
-
-const unsigned int LEFT_MOTOR = 0;
-const unsigned int RIGHT_MOTOR = 1;
-const unsigned int LEFT_TAPEFOLLOWER = 3;
-const unsigned int RIGHT_TAPEFOLLOWER = 4;
-const unsigned int FRONT_INTERSECTION = 0;
-const unsigned int LEFT_INTERSECTION = 1;
-const unsigned int RIGHT_INTERSECTION = 2;
-
-const unsigned int FOLLOWING_TAPE = 1;
-const unsigned int INTERSECTION_DETECTED = 2;
-const unsigned int PASSENGER_DETECTED_LEFT = 3;
-const unsigned int PASSENGER_DETECTED_RIGHT = 4;
-const unsigned int DROPOFF_DETECTED_LEFT = 5;
-const unsigned int DROPOFF_DETECTED_RIGHT = 6;
-const unsigned int COLLISION_DETECTED = 7;
-
-const unsigned int START = 8;
-const unsigned int FIXEDPATH_LEFT = 9;
-const unsigned int FIXEDPATH_RIGHT = 10;
-const unsigned int FIXEDPATH_AFTERDROPOFF_LEFT = 11;
-const unsigned int FIXEDPATH_AFTERDROPOFF_RIGHT = 12;
-const unsigned int RANDOM_TODROPOFF = 13;
-const unsigned int RANDOM_LOST = 14;
+#include <avr/interrupt.h>
+#include "constants.h"
 
 //VARIABLE DECLARATIONS
-volatile unsigned int detection_state = COLLISION_DETECTED;
+volatile unsigned int detection_state = FOLLOWING_TAPE;
 unsigned int navigation_mode = FIXEDPATH_LEFT;
 unsigned int turn_number = 0;
 bool tape_is_lost = false;
@@ -64,10 +26,41 @@ int m;
 int con;
 int c;
 int ki;
+int int0;
 
 int collision_testing_timer;
 
+ISR(INT0_vect) {
+	detection_state = COLLISION_DETECTED;
+	int0++;
+	LCD.clear();
+	LCD.print(int0);
+};
+
+void enableExternalInterrupt(unsigned int INTX, unsigned int mode)
+{
+	if (INTX > 3 || mode > 3 || mode == 1) return;
+	cli();
+	/* Allow pin to trigger interrupts        */
+	EIMSK |= (1 << INTX);
+	/* Clear the interrupt configuration bits */
+	EICRA &= ~(1 << (INTX * 2 + 0));
+	EICRA &= ~(1 << (INTX * 2 + 1));
+	/* Set new interrupt configuration bits   */
+	EICRA |= mode << (INTX * 2);
+	sei();
+}
+
+void disableExternalInterrupt(unsigned int INTX)
+{
+	if (INTX > 3) return;
+	EIMSK &= ~(1 << INTX);
+}
+
+
+
 void setup() {
+	enableExternalInterrupt(INT0, FALLING);
   #include <phys253setup.txt>
   LCD.clear();
   LCD.home();
@@ -82,11 +75,12 @@ void loop() {
    
    if(detection_state == COLLISION_DETECTED){
 	   collision_turn_around();
+	   detection_state = FOLLOWING_TAPE;
    }
 
    if(detection_state == STOP){
         motor.speed(0,0);
-        motor.speed(1,0);
+        motor.speed(2,0);
    }
 }
 
@@ -95,8 +89,6 @@ void loop() {
 void follow_tape_normal(){
     while(detection_state == FOLLOWING_TAPE){
         
-       COLLISION_TURN_TIMER = 2500;
-       
        detection_state == COLLISION_DETECTED;
         
         kp = 50;
@@ -159,42 +151,27 @@ void follow_tape_normal(){
         c=c+1;
         m=m+1;
         motor.speed(0,MOTOR_SPEED+con);
-        motor.speed(1,MOTOR_SPEED-con);
+        motor.speed(2,MOTOR_SPEED-con);
         lerr=error;
     }
 }
 
 
-void collision_turn_around(){
-	motor.speed(LEFT_MOTOR,0);
-	motor.speed(RIGHT_MOTOR,0);
-	
-	int initial_timer = millis();
+void collision_turn_around() {
+	motor.speed(0, -TURN_SPEED / 3);
+	motor.speed(2, -TURN_SPEED);
+	delay(1100);
+
+	motor.speed(0, TURN_SPEED);
+	motor.speed(2, -TURN_SPEED);
+
 	bool is_on_tape = true;
-	
-	while((millis() - initial_timer) < COLLISION_TURN_TIMER){
-		motor.speed(LEFT_MOTOR, -TURN_SPEED * 2 );
-		motor.speed(RIGHT_MOTOR,0);
+
+	while (is_on_tape) {
+		is_on_tape = (digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER));
 	}
 
-     motor.speed(LEFT_MOTOR,0);
-     motor.speed(RIGHT_MOTOR, TURN_SPEED * 2);
-
-    is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
-    
-    while(is_on_tape){
-        is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
-    }
-
-    delay(250);
-    
-	while(!is_on_tape){
-		is_on_tape = digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER);
+	while (!is_on_tape) {
+		is_on_tape = (digitalRead(LEFT_TAPEFOLLOWER) && digitalRead(RIGHT_TAPEFOLLOWER));
 	}
-	
-	if(!passenger_picked_up){
-		navigation_mode = RANDOM_LOST;
-	}
-
-	detection_state = STOP;
 }

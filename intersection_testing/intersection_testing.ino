@@ -1,41 +1,8 @@
 #include <phys253.h>
 #include <LiquidCrystal.h>
+#include "constants.h"
 
 //CONSTANTS
-const unsigned long MOTOR_SPEED = 160;
-
-const unsigned long FORWARD = 0;
-const unsigned long LEFT = 1;
-const unsigned long RIGHT = 2;
-
-const int ERROR_GAIN = 3;
-const int MAX_GAIN = 170;
-const unsigned long STOP = 69;
-const int TURN_SPEED = 120;
-unsigned long INTERSECTION_TIMER = 7500 / MOTOR_SPEED;
-unsigned long TURN_TIMER = 55000 / MOTOR_SPEED;
-
-const unsigned long LEFT_TAPEFOLLOWER = 3;
-const unsigned long RIGHT_TAPEFOLLOWER = 4;
-const unsigned long FRONT_INTERSECTION = 0;
-const unsigned long LEFT_INTERSECTION = 1;
-const unsigned long RIGHT_INTERSECTION = 2;
-
-const unsigned long FOLLOWING_TAPE = 1;
-const unsigned long INTERSECTION_DETECTED = 2;
-const unsigned long PASSENGER_DETECTED_LEFT = 3;
-const unsigned long PASSENGER_DETECTED_RIGHT = 4;
-const unsigned long DROPOFF_DETECTED_LEFT = 5;
-const unsigned long DROPOFF_DETECTED_RIGHT = 6;
-const unsigned long COLLISION_DETECTED = 7;
-
-const unsigned long START = 8;
-const unsigned long FIXEDPATH_LEFT = 9;
-const unsigned long FIXEDPATH_RIGHT = 10;
-const unsigned long FIXEDPATH_AFTERDROPOFF_LEFT = 11;
-const unsigned long FIXEDPATH_AFTERDROPOFF_RIGHT = 12;
-const unsigned long RANDOM_TODROPOFF = 13;
-const unsigned long RANDOM_LOST = 14;
 
 //VARIABLE DECLARATIONS
 volatile unsigned long detection_state = FOLLOWING_TAPE;
@@ -93,10 +60,8 @@ void loop() {
 **/
 void follow_tape_normal(){
     while(detection_state == FOLLOWING_TAPE){
-        INTERSECTION_TIMER = knob(6)/4;
-        TURN_TIMER = knob(7);
-        kp = 100;
-        kd = 50;
+		kp = knob(6) / 4;
+		kd = knob(7) / 4;
         left = digitalRead(LEFT_TAPEFOLLOWER);
         right = digitalRead(RIGHT_TAPEFOLLOWER);
      
@@ -145,23 +110,29 @@ void follow_tape_normal(){
             con = -MAX_GAIN;
         }
         
-        if (c==150){
-            LCD.clear();
-            LCD.print("INT ");
-            LCD.print(INTERSECTION_TIMER);
-            LCD.print("TURN ");
-            LCD.print(TURN_TIMER);
-            c = 0;
-        }
+		if (c == 150) {
+			LCD.clear();
+			LCD.print("P");
+			LCD.print(kp);
+			LCD.print("D");
+			LCD.print(kd);
+			LCD.print(" ");
+			LCD.print(left);
+			LCD.print(" ");
+			LCD.print(right);
+			c = 0;
+		}
         
         c=c+1;
         m=m+1;
         motor.speed(0,MOTOR_SPEED+con);
         motor.speed(1,MOTOR_SPEED-con);
         lerr=error;
+		
+		bool front_intersection_invalid = !(digitalRead(FRONT_INTERSECTION1) || digitalRead(FRONT_INTERSECTION2));
 
-        if((digitalRead(LEFT_INTERSECTION) ||
-        digitalRead(RIGHT_INTERSECTION))){
+        if(digitalRead(LEFT_INTERSECTION) ||
+        digitalRead(RIGHT_INTERSECTION))
             //We don't want to read multiple turns in quick succession.
             //This happens when a turn overshoots and the turn detectors see stuff again.
             if((millis() - initial_turn_timer) > 2750){
@@ -171,6 +142,20 @@ void follow_tape_normal(){
             else{
                 LCD.print("FALSE TURN");
             }
+
+			LCD.clear();
+
+			if (front_intersection_invalid) {
+				LCD.print("f");
+			}
+
+			if (digitalRead(RIGHT_INTERSECTION)) {
+				LCD.print("r");
+			}
+
+			if (digitalRead(LEFT_INTERSECTION)) {
+				LCD.print("l");
+			}
         }
     }
 }
@@ -182,7 +167,7 @@ void follow_tape_intersection(){
     unsigned long initial_timer = millis();
     bool left_intersection_valid = false;
     bool right_intersection_valid = false;
-    bool front_intersection_valid = true; //TODO CHANGE TO FALSE WHEN THIS IS FIXED
+    bool front_intersection_valid = false; 
 
     while((millis() - initial_timer) < INTERSECTION_TIMER){
         if(digitalRead(LEFT_INTERSECTION)){
@@ -193,12 +178,18 @@ void follow_tape_intersection(){
             right_intersection_valid = true;
         }
 
-        if(digitalRead(FRONT_INTERSECTION)){
-          //  front_intersection_valid = true; not working yet
+		bool front_intersection_invalid = !(digitalRead(FRONT_INTERSECTION1) || digitalRead(FRONT_INTERSECTION2));
+
+        if(front_intersection_invalid){
+            front_intersection_valid = false;
         }
 
-        kp= 50;
-        kd= 30;
+		else {
+			front_intersection_valid = true;
+		}
+
+		kp = knob(6) / 4;
+		kd = knob(7) / 4;
         left = digitalRead(LEFT_TAPEFOLLOWER);
         right = digitalRead(RIGHT_TAPEFOLLOWER);
      
@@ -244,22 +235,21 @@ void follow_tape_intersection(){
 
 // UNCOMMENT THIS AND COMMENT THE BELOW CODE TO TEST INTERSECTION DETECTION.
 ///////////////////////////////////////////////
-//    LCD.clear();
-//    
-//    if(front_intersection_valid){
-//        LCD.write("FRONT");
-//    }
-//
-//    if(left_intersection_valid){
-//        LCD.write("LEFT");
-//    }
-//
-//    if(right_intersection_valid){
-//        LCD.write("RIGHT");
-//    }
-//
-//    turn_number++;
-//    detection_state = STOP;
+    
+    if(front_intersection_valid){
+        LCD.write("FRONT");
+    }
+
+    if(left_intersection_valid){
+        LCD.write("LEFT");
+    }
+
+    if(right_intersection_valid){
+        LCD.write("RIGHT");
+    }
+
+    turn_number++;
+    detection_state = STOP;
 //////////////////////////////////////////////	
 
 //Just for turning and stuff
@@ -275,20 +265,20 @@ void follow_tape_intersection(){
 ///////////////////////////////////////////////////////
 
 //UNCOMMENT THIS FOR TESTING TURNING.
- 	LCD.clear();
-	
-	if(left_intersection_valid){
-		turn_modified(LEFT);
-	}
-	
-	else if(right_intersection_valid){
-		turn_modified(RIGHT);
-	}
+ //	LCD.clear();
+	//
+	//if(left_intersection_valid){
+	//	turn_modified(LEFT);
+	//}
+	//
+	//else if(right_intersection_valid){
+	//	turn_modified(RIGHT);
+	//}
 
-   detection_state = FOLLOWING_TAPE;
+ //  detection_state = FOLLOWING_TAPE;
 
-   turn_number++;
-   LCD.print("TURNED");
+ //  turn_number++;
+ //  LCD.print("TURNED");
 ///////////////////// 
 }
 

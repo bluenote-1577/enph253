@@ -5,7 +5,7 @@
 	        all non-arduino files created by visual micro and all visual studio project or solution files can be freely deleted and are not required to compile a sketch (do not delete your own code!).
 	        note: debugger breakpoints are stored in '.sln' or '.asln' files, knowledge of last uploaded breakpoints is stored in the upload.vmps.xml file. Both files are required to continue a previous debug session without needing to compile and upload again
 	
-	Hardware: TINAH Board - UBC Engineering Physics 253, Platform=avr, Package=TINAH_hardware
+	Hardware: TINAH Board - UBC Engineering Physics 253, Platform=avr, Package=TINAH
 */
 
 #ifndef _VSARDUINO_H_
@@ -13,7 +13,7 @@
 #define __AVR_ATmega128__
 #define F_CPU 16000000L
 #define ARDUINO 10609
-#define ARDUINO_AVR_TINAH_HARDWARE_TINAH_HARDWARE_AVR_TINAH
+#define ARDUINO_AVR_TINAH_TINAH_AVR_TINAH
 #define ARDUINO_ARCH_AVR
 #define __cplusplus 201103L
 #define __AVR__
@@ -50,4 +50,5 @@ extern "C" void __cxa_pure_virtual() {;}
 #undef PSTR
 #define PSTR(string_literal) ((const PROGMEM char *)(string_literal))")
 #include <intersection_testing.ino>
+#include <..\constants.h>
 #endif

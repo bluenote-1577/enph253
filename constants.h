@@ -7,33 +7,47 @@
 #else
 	#include "WProgram.h"
 #endif
+
+#define ARM_ROTATION_SERVO RCServo1
+#define CLAW_SERVO RCServo0
+
 //CONSTANTS
-const unsigned long MOTOR_SPEED = 150;
+const unsigned long MOTOR_SPEED = 165;
 
 //TUNING PARAMETERS
-const int ERROR_GAIN = 3;
+const unsigned long PASSENGER_DETECTED_ROLLBACK_TIMER = 200;
+const int ERROR_GAIN = 8;
 const int MAX_GAIN = 150;
 const unsigned long INTERSECTION_TIMER = 150;
 const unsigned long TURN_TIMER = 300;
-const unsigned long LOST_TAPE_TIMER = 1200;
-const unsigned long COLLISION_TURN_TIMER = 950;
-const unsigned long INTERSECTION_WAIT_TIMER = 1400;
+const unsigned long LOST_TAPE_TIMER = 800;
+const unsigned long COLLISION_TURN_TIMER = 1300;
+const unsigned long INTERSECTION_WAIT_TIMER = 1000;
+const unsigned long PASSENGER_IR_THRESHOLD = 800;
 
 //SIGNAL PINS
+const unsigned long ARM_STOP_SWITCH = 8;
+const unsigned long LEFT_PASSENGER_IR = 0;
+const unsigned long RIGHT_PASSENGER_IR = 1;
+const unsigned long COLLISION_SWITCH = 0;
 const unsigned long LEFT_MOTOR = 0;
 const unsigned long RIGHT_MOTOR = 1;
+const unsigned long ARM_MOTOR = 2;
 const unsigned long LEFT_TAPEFOLLOWER = 1;
 const unsigned long RIGHT_TAPEFOLLOWER = 2;
 const unsigned long LEFT_INTERSECTION = 3;
 const unsigned long RIGHT_INTERSECTION = 4;
 const unsigned long FRONT_INTERSECTION1 = 5;
-const unsigned long FRONT_INTERSECTION2 = 7;
+const unsigned long FRONT_INTERSECTION2 = 6;
+const unsigned long FRONT_INTERSECTION3 = 7;
+const unsigned long LEFT_DROPOFF_IR = 0;
+const unsigned long RIGHT_DROPOFF_IR = 1;
+const unsigned long FORWARD_DROPOFF_IR = 2;
 
 //DETECTION STATES
 const unsigned long FOLLOWING_TAPE = 1;
 const unsigned long INTERSECTION_DETECTED = 2;
-const unsigned long PASSENGER_DETECTED_LEFT = 3;
-const unsigned long PASSENGER_DETECTED_RIGHT = 4;
+const unsigned long PASSENGER_DETECTED = 3;
 const unsigned long DROPOFF_DETECTED_LEFT = 5;
 const unsigned long DROPOFF_DETECTED_RIGHT = 6;
 const unsigned long COLLISION_DETECTED = 7;
@@ -50,7 +64,7 @@ const unsigned long FIXEDPATH_LEFT = 9;
 const unsigned long FIXEDPATH_RIGHT = 10;
 const unsigned long FIXEDPATH_AFTERDROPOFF_LEFT = 11;
 const unsigned long FIXEDPATH_AFTERDROPOFF_RIGHT = 12;
-const unsigned long RANDOM_TODROPOFF = 13;
+const unsigned long GUIDED_DROPOFF = 13;
 const unsigned long RANDOM_LOST = 14;
 
 //STOP STATE

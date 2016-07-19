@@ -28,12 +28,12 @@ void turn(int DIRECTION) {
 		motor.speed(1, TURN_SPEED);
 	}
 
-	delay(100);
-
 	bool is_on_tape = true;
 	while (is_on_tape) {
 		is_on_tape = (digitalRead(LEFT_TAPEFOLLOWER) || digitalRead(RIGHT_TAPEFOLLOWER));
 	}
+
+	delay(200);
 
 	while (!is_on_tape) {
 		is_on_tape = (digitalRead(LEFT_TAPEFOLLOWER) && digitalRead(RIGHT_TAPEFOLLOWER));
@@ -42,7 +42,7 @@ void turn(int DIRECTION) {
 }
 
 void collision_turn_around() {
-	motor.speed(0, -TURN_SPEED/3);
+	motor.speed(0, -TURN_SPEED/2);
 	motor.speed(1, -TURN_SPEED);
 	delay(1100);
 

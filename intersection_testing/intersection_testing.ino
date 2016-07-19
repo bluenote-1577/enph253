@@ -37,13 +37,7 @@ void setup() {
 void loop() {
 
    if(detection_state == FOLLOWING_TAPE){
-	   if (turn_number == 2) {
-		   detection_state = STOP;
-	   }
-
-	   else {
-		   follow_tape_normal();
-	   }
+      follow_tape_normal();
    }
 
    if(detection_state == INTERSECTION_DETECTED){
@@ -135,7 +129,7 @@ void follow_tape_normal(){
         digitalRead(RIGHT_INTERSECTION))
             //We don't want to read multiple turns in quick succession.
             //This happens when a turn overshoots and the turn detectors see stuff again.
-            if((millis() - initial_turn_timer) > 2750){
+            if((millis() - initial_turn_timer) >INTERSECTION_WAIT_TIMER){
                  detection_state = INTERSECTION_DETECTED;
             }
 
@@ -143,22 +137,9 @@ void follow_tape_normal(){
                 LCD.print("FALSE TURN");
             }
 
-			LCD.clear();
-
-			if (front_intersection_invalid) {
-				LCD.print("f");
-			}
-
-			if (digitalRead(RIGHT_INTERSECTION)) {
-				LCD.print("r");
-			}
-
-			if (digitalRead(LEFT_INTERSECTION)) {
-				LCD.print("l");
-			}
         }
     }
-}
+
 
 /**
 State function for the intersection detected state
@@ -170,6 +151,18 @@ void follow_tape_intersection(){
     bool front_intersection_valid = false; 
 
     while((millis() - initial_timer) < INTERSECTION_TIMER){
+
+		bool front_intersection_invalid = !(digitalRead(FRONT_INTERSECTION1) ||
+			digitalRead(FRONT_INTERSECTION3));
+
+		if (front_intersection_invalid) {
+			front_intersection_valid = false;
+		}
+
+		else {
+			front_intersection_valid = true;
+		}
+
         if(digitalRead(LEFT_INTERSECTION)){
             left_intersection_valid = true;
         }
@@ -177,16 +170,6 @@ void follow_tape_intersection(){
         if(digitalRead(RIGHT_INTERSECTION)){
             right_intersection_valid = true;
         }
-
-		bool front_intersection_invalid = !(digitalRead(FRONT_INTERSECTION1) || digitalRead(FRONT_INTERSECTION2));
-
-        if(front_intersection_invalid){
-            front_intersection_valid = false;
-        }
-
-		else {
-			front_intersection_valid = true;
-		}
 
 		kp = knob(6) / 4;
 		kd = knob(7) / 4;
@@ -235,7 +218,9 @@ void follow_tape_intersection(){
 
 // UNCOMMENT THIS AND COMMENT THE BELOW CODE TO TEST INTERSECTION DETECTION.
 ///////////////////////////////////////////////
-    
+
+	LCD.setCursor(0, 1);
+
     if(front_intersection_valid){
         LCD.write("FRONT");
     }
@@ -247,6 +232,10 @@ void follow_tape_intersection(){
     if(right_intersection_valid){
         LCD.write("RIGHT");
     }
+
+	LCD.print(digitalRead(FRONT_INTERSECTION1));
+	LCD.print(digitalRead(FRONT_INTERSECTION3));
+	LCD.print(digitalRead(FRONT_INTERSECTION2));
 
     turn_number++;
     detection_state = STOP;

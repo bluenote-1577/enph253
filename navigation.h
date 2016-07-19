@@ -13,7 +13,7 @@
 class Navigation {
 public:
 
-	unsigned long navigation_mode = FIXEDPATH_LEFT;
+	unsigned long navigation_mode = START;
 	unsigned long intersection_turn_timer;
 
 	void navigate(bool front_intersection_valid,
@@ -35,6 +35,8 @@ private:
 	bool navigate_fixedpath_right();
 
 	bool navigate_fixedpath_left();
+
+	void navigate_guided_dropoff();
 
 	bool validate(
 		bool front_should_be_valid,

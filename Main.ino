@@ -1,4 +1,5 @@
 #include "navigation.h"
+#include <avr/interrupt.h>
 
 
 //VARIABLE DECLARATIONS
@@ -24,7 +25,40 @@ int m;
 int con;
 int c;
 int ki;
+
+ISR(INT0_vect) {
+	if (detection_state == START) {
+		return;
+	}
+	detection_state = COLLISION_DETECTED;
+};
+
+void enableExternalInterrupt(unsigned int INTX, unsigned int mode)
+{
+	if (INTX > 3 || mode > 3 || mode == 1) return;
+	cli();
+	/* Allow pin to trigger interrupts        */
+	EIMSK |= (1 << INTX);
+	/* Clear the interrupt configuration bits */
+	EICRA &= ~(1 << (INTX * 2 + 0));
+	EICRA &= ~(1 << (INTX * 2 + 1));
+	/* Set new interrupt configuration bits   */
+	EICRA |= mode << (INTX * 2);
+	sei();
+}
+
+void disableExternalInterrupt(unsigned int INTX)
+{
+	if (INTX > 3) return;
+	EIMSK &= ~(1 << INTX);
+}
+
 void setup() {
+  disableExternalInterrupt(INT0);
+  disableExternalInterrupt(INT1);
+  disableExternalInterrupt(INT2);
+  disableExternalInterrupt(INT3);
+
   #include <phys253setup.txt>
   LCD.clear();
   LCD.home();
@@ -59,7 +93,7 @@ void follow_tape_normal(){
 
     while(detection_state == FOLLOWING_TAPE){
 
-		if (!digitalRead(0)) {
+		if (!digitalRead(COLLISION_SWITCH)) {
 			detection_state = COLLISION_DETECTED;
 		}
 
@@ -100,9 +134,8 @@ void follow_tape_normal(){
 		else{
 			if (tape_is_lost) {
 				if ((unsigned long)(millis() - tape_lost_time) > LOST_TAPE_TIMER) {
-					//	navigation_mode = RANDOM_LOST;
-					LCD.clear();
-					LCD.print("LOST");
+					//	navigation_mode = RANDOM_LOST TODO;
+					//LCD.print("LOST");
 					//detection_state = STOP; // TODO REMOVE
 				}
 
@@ -133,6 +166,7 @@ void follow_tape_normal(){
 		
         if (c==150){
             LCD.clear();
+			LCD.home();
             LCD.print("P");
             LCD.print(kp);
             LCD.print("D");
@@ -141,6 +175,10 @@ void follow_tape_normal(){
             LCD.print(left);
             LCD.print(" ");
             LCD.print(right);
+			LCD.setCursor(0, 1);
+			LCD.print(digitalRead(FRONT_INTERSECTION1));
+			LCD.print(digitalRead(FRONT_INTERSECTION2));
+			LCD.print(digitalRead(FRONT_INTERSECTION3));
             c = 0;
         }
         
@@ -178,16 +216,6 @@ void follow_tape_intersection(){
         if(digitalRead(RIGHT_INTERSECTION)){
             right_intersection_valid = true;
         }
-
-		bool straight_not_possible = !(digitalRead(FRONT_INTERSECTION1) || digitalRead(FRONT_INTERSECTION2));
-
-        if (straight_not_possible){
-			front_intersection_valid = false;
-        }
-
-		else {
-			front_intersection_valid = true;
-		}
 
         kp= knob(6) / 4;
         kd = knob(7) / 4;
@@ -234,11 +262,28 @@ void follow_tape_intersection(){
         lerr=error;
     }
 
+	bool straight_possible = (digitalRead(FRONT_INTERSECTION1) || 
+		digitalRead(FRONT_INTERSECTION2) ||
+		digitalRead(FRONT_INTERSECTION3));
+
+	if (straight_possible) {
+		front_intersection_valid = true;
+	}
+
+	else {
+		front_intersection_valid = false;
+	}
+
+
     navigation.navigate(front_intersection_valid, left_intersection_valid, right_intersection_valid, detection_state);
 }
 
+/*
+State function for collision detection. 
+*/
 void collision_detected() {
 	LCD.clear();
+	LCD.home();
 	LCD.print("TURNING");
 
 	collision_turn_around();
@@ -246,15 +291,21 @@ void collision_detected() {
 	if (!navigation.should_turn_around()) {
 		navigation.navigation_mode = RANDOM_LOST;
 		LCD.clear();
+		LCD.home();
 		LCD.print("TURN AROUND FALSE");
+		if (!passenger_picked_up) {
+			navigation.navigation_mode = RANDOM_LOST;
+		}
 	}
 
 	else {
+		LCD.home();
 		LCD.clear();
 		LCD.print("TURN AROUND TRUE");
 	}
 
-	detection_state = STOP;
-	//detection_state = FOLLOWING_TAPE;
+
+	//detection_state = STOP;
+	detection_state = FOLLOWING_TAPE;
 }
 

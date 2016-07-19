@@ -96,7 +96,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Arduino\libraries\LiquidCrystal\src;C:\Program Files (x86)\Arduino\libraries\LiquidCrystal\src\utility;C:\Users\Jim\Documents\Arduino\libraries\phys253TINAHArduino;C:\Users\Jim\Documents\Arduino\libraries\phys253TINAHArduino\utility;C:\Program Files (x86)\Arduino\libraries;C:\Users\Jim\Documents\Arduino\hardware\TINAH\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\xuagesod.yt5\Micro Platforms\default\debuggers;C:\Users\Jim\Documents\Arduino\libraries;C:\Users\Jim\Documents\Arduino\hardware\TINAH\avr\cores\arduino;C:\Users\Jim\Documents\Arduino\hardware\TINAH\avr\cores\arduino\avr-libc;C:\Users\Jim\Documents\Arduino\hardware\TINAH\avr\variants\TINAHvariant;C:\Users\Jim\Documents\Arduino\Main\collision_testing;C:\Program Files (x86)\Arduino\hardware\tools\avr/avr/include/;C:\Program Files (x86)\Arduino\hardware\tools\avr//avr/include/avr/;C:\Program Files (x86)\Arduino\hardware\tools\avr/lib\gcc\avr\4.8.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Arduino\libraries\LiquidCrystal\src;C:\Program Files (x86)\Arduino\libraries\LiquidCrystal\src\utility;C:\Users\Jim\Documents\Arduino\libraries\phys253TINAHArduino;C:\Users\Jim\Documents\Arduino\libraries\phys253TINAHArduino\utility;C:\Program Files (x86)\Arduino\libraries;C:\Users\Jim\Documents\Arduino\hardware\TINAH\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\xuagesod.yt5\Micro Platforms\default\debuggers;C:\Users\Jim\Documents\Arduino\libraries;C:\Users\Jim\Documents\Arduino\hardware\TINAH\avr\cores\arduino;C:\Users\Jim\Documents\Arduino\hardware\TINAH\avr\cores\arduino\avr-libc;C:\Users\Jim\Documents\Arduino\hardware\TINAH\avr\variants\TINAHvariant;C:\Users\Jim\Documents\Arduino\Main\collision_testing;C:\Program Files (x86)\Arduino\hardware\tools\avr/avr/include/;C:\Program Files (x86)\Arduino\hardware\tools\avr//avr/include/avr/;C:\Program Files (x86)\Arduino\hardware\tools\avr/lib\gcc\avr\4.8.1\include;C:\Users\Jim\Documents\Arduino\Main;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>C:\Users\Jim\Documents\Arduino\Main\collision_testing\__vm\.collision_testing.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <PreprocessorDefinitions>__AVR_ATmega128__;F_CPU=16000000L;ARDUINO=10609;ARDUINO_AVR_TINAH_TINAH_AVR_TINAH;ARDUINO_ARCH_AVR;__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -127,6 +127,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\constants.h" />
     <ClInclude Include="__vm\.collision_testing.vsarduino.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

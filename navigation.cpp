@@ -18,23 +18,57 @@ void Navigation::navigate(bool front_intersection_valid,
 	bool correct_turn;
 	turn_number++;
 
+	if (navigation_mode == START) {
+		if (!right_intersection_valid) {
+			navigation_mode = FIXEDPATH_LEFT;
+		}
+
+		else if (!left_intersection_valid) {
+			navigation_mode = FIXEDPATH_RIGHT;
+		}
+
+		else {
+			detection_state = STOP;
+			LCD.clear();
+			LCD.print("START ERROR");
+		}
+	}
+
 	if (navigation_mode == RANDOM_LOST) {
 		navigate_random();
 	}
 
-	else if (navigation_mode == FIXEDPATH_RIGHT) {
+	if (navigation_mode == FIXEDPATH_RIGHT) {
 		correct_turn = navigate_fixedpath_right();
 	}
 
-	else if (navigation_mode == FIXEDPATH_LEFT) {
+	if (navigation_mode == FIXEDPATH_LEFT) {
 		correct_turn = navigate_fixedpath_left();
+	}
+
+	if (navigation_mode == GUIDED_DROPOFF) {
+		correct_turn = true;
+		navigate_guided_dropoff();
 	}
 
 	if (!correct_turn) {
 		LCD.clear();
+		LCD.home();
 		LCD.print("INVALID ");
 		LCD.print(turn_number);
 		detection_state = STOP;
+
+		if (front_intersection_valid) {
+			LCD.print("f");
+		}
+
+		if (left_intersection_valid) {
+			LCD.print("l");
+		}
+
+		if (right_intersection_valid) {
+			LCD.print("r");
+		}
 	}
 
 	if (turn_number > 69) {
@@ -48,8 +82,6 @@ void Navigation::navigate(bool front_intersection_valid,
 	}
 
 	intersection_turn_timer = millis();
-
-	LCD.print("DONE");
 }
 
 void Navigation::navigate_random(){
@@ -95,33 +127,141 @@ bool Navigation::navigate_fixedpath_right(){
 
 	else if (turn_number == 3) {
 		turn(LEFT);
-		validate(false, true, true);
+		return validate(false, true, true);
 	}
 
-	if (turn_number == 4) {
+	else if (turn_number == 4) {
 		turn(LEFT);
-		validate(false, true, false);
+		return validate(false, true, false);
 	}
 
-	if (turn_number == 5) {
+	else if (turn_number == 5) {
 		turn(LEFT);
 		return validate(true, true, false);
 	}
 
-	if (turn_number == 6) {
+	else if (turn_number == 6) {
 		turn(RIGHT);
 		return validate(true, true, true);
 	}
 
-	if (turn_number == 7) {
+	else if (turn_number == 7) {
 		turn(RIGHT);
 		return validate(true, false, true);
 	}
 
-	if (turn_number == 8) {
+	else if (turn_number == 8) {
 		turn(RIGHT);
-		return validate(false, true, true); 
+		return validate(false, true, true);
 	}
+
+	else if (turn_number == 9) {
+		turn(FORWARD);
+		return validate(true, true, false);
+	}
+
+	else if (turn_number == 10) {
+		turn(RIGHT);
+		return validate(true, true, true);
+	}
+
+	else if (turn_number == 11) {
+		turn(LEFT);
+		return validate(false, true, true);
+	}
+
+	else if (turn_number == 12) {
+		turn(FORWARD);
+		return validate(true, true, false);
+	}
+
+	else if (turn_number == 13) {
+		turn(LEFT);
+		return validate(true, true, false);
+	}
+
+	else if (turn_number == 14) {
+		turn(LEFT);
+		return validate(false, true, true);
+	}
+
+	else if (turn_number == 15) {
+		turn(FORWARD);
+		return validate(true, true, false);
+	}
+
+	else if (turn_number == 16) {
+		turn(LEFT);
+		return validate(true, true, false);
+	}
+
+	else if (turn_number == 17) {
+		turn(RIGHT);
+		return validate(true, true, true);
+	}
+
+	else if (turn_number == 18) {
+		turn(LEFT);
+		return validate(true, true, false);
+	}
+
+	else if (turn_number == 19) {
+		turn(LEFT);
+		return validate(false, true, true);
+	}
+
+	else if (turn_number == 20) {
+		turn(FORWARD);
+		return validate(true, false, true);
+	}
+
+	else if (turn_number == 21) {
+		turn(FORWARD);
+		return validate(true, true, true);
+	}
+
+	else if (turn_number == 22) {
+		turn(RIGHT);
+		return validate(false, true, true);
+	}
+
+	else if (turn_number == 23) {
+		turn(RIGHT);
+		return validate(false, false, true);
+	}
+
+	else if (turn_number == 24) {
+		turn(RIGHT);
+		return validate(true, false, true);
+	}
+
+	else if (turn_number == 25) {
+		turn(RIGHT);
+		return validate(true, true, true);
+	}
+
+	else if (turn_number == 26) {
+		turn(LEFT);
+		return validate(false, true, true);
+	}
+
+	else if (turn_number == 27) {
+		turn(FORWARD);
+		return validate(true, true, false);
+	}
+
+	else if (turn_number == 28) {
+		turn(LEFT);
+		return validate(false, true, false);
+	}
+
+	else if (turn_number == 29) {
+		turn(LEFT);
+		return validate(true, true, false);
+		turn_number = 1;
+	}
+
+	else return false;
 }
 
 bool Navigation::navigate_fixedpath_left() {
@@ -166,7 +306,143 @@ bool Navigation::navigate_fixedpath_left() {
 		return validate(false, true, true); 
 	}
 
+	else if (turn_number == 9) {
+		turn(FORWARD);
+		return validate(true, false, true);
+	}
+
+	else if (turn_number == 10) {
+		turn(LEFT);
+		return validate(true, true, true);
+	}
+
+	else if (turn_number == 11) {
+		turn(RIGHT);
+		return validate(false, true, true);
+	}
+
+	else if (turn_number == 12) {
+		turn(FORWARD);
+		return validate(true, false, true);
+	}
+
+	else if (turn_number == 13) {
+		turn(RIGHT);
+		return validate(true, false, true);
+	}
+
+	else if (turn_number == 14) {
+		turn(RIGHT);
+		return validate(false, true, true);
+	}
+
+	else if (turn_number == 15) {
+		turn(FORWARD);
+		return validate(true, false, true);
+	}
+
+	else if (turn_number == 16) {
+		turn(RIGHT);
+		return validate(true, false, true);
+	}
+
+	else if (turn_number == 17) {
+		turn(LEFT);
+		return validate(true, true, true);
+	}
+
+	else if (turn_number == 18) {
+		turn(RIGHT);
+		return validate(true, false, true);
+	}
+
+	else if (turn_number == 19) {
+		turn(RIGHT);
+		return validate(false, true, true);
+	}
+
+	else if (turn_number == 20) {
+		turn(FORWARD);
+		return validate(true, true, false);
+	}
+
+	else if (turn_number == 21) {
+		turn(FORWARD);
+		return validate(true, true, true);
+	}
+
+	else if (turn_number == 22) {
+		turn(LEFT);
+		return validate(false, true, true);
+	}
+
+	else if (turn_number == 23) {
+		turn(LEFT);
+		return validate(false, true, false);
+	}
+
+	else if (turn_number == 24) {
+		turn(LEFT);
+		return validate(true, true, false);
+	}
+
+	else if (turn_number == 25) {
+		turn(LEFT);
+		return validate(true, true, true);
+	}
+
+	else if (turn_number == 26) {
+		turn(RIGHT);
+		return validate(false, true, true);
+	}
+
+	else if (turn_number == 27) {
+		turn(FORWARD);
+		return validate(true, false, true);
+	}
+
+	else if (turn_number == 28) {
+		turn(RIGHT);
+		return validate(false, false, true);
+	}
+
+	else if (turn_number == 29) {
+		turn(RIGHT);
+		return validate(true, false, true);
+		turn_number = 1;
+	}
+
 	else return false;
+}
+
+void Navigation::navigate_guided_dropoff() {
+	int left_ir = analogRead(LEFT_DROPOFF_IR);
+	int right_ir = analogRead(RIGHT_DROPOFF_IR);
+	int forward_ir = analogRead(FORWARD_DROPOFF_IR);
+
+	unsigned long max_direction;
+
+	if (left_ir > right_ir) {
+		max_direction = LEFT;
+	}
+
+	else {
+		max_direction = RIGHT;
+	}
+
+	if (max_direction == RIGHT) {
+		if (forward_ir > right_ir) {
+			max_direction = FORWARD;
+		}
+	}
+
+	else {
+		if (forward_ir > left_ir) {
+			max_direction = FORWARD;
+		}
+	}
+
+	turn(max_direction);
 }
 
 bool Navigation::validate(
@@ -193,24 +469,17 @@ bool Navigation::should_turn_around() {
 
 	bool should_collide = false;
 
-	if (navigation_mode = FIXEDPATH_LEFT) {
-		if (turn_number == 7) {
+	if (navigation_mode == FIXEDPATH_LEFT||
+		navigation_mode == FIXEDPATH_RIGHT) {
+
+		if (turn_number == 7 ||
+			turn_number == 8 ||
+			turn_number == 13 ||
+			turn_number == 18 ||
+			turn_number == 19) {
 			should_collide = true;
 		}
 
-		else if (turn_number == 8) {
-			should_collide = true;
-		}
-	}
-
-	else if (navigation_mode = FIXEDPATH_RIGHT) {
-		if (turn_number == 7) {
-			should_collide = true;
-		}
-
-		else if (turn_number == 8) {
-			should_collide = true;
-		}
 	}
 
 	return should_collide;

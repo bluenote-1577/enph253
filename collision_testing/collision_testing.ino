@@ -89,8 +89,6 @@ void loop() {
 void follow_tape_normal(){
     while(detection_state == FOLLOWING_TAPE){
         
-       detection_state == COLLISION_DETECTED;
-        
         kp = 50;
         kd = 30;
         left = digitalRead(LEFT_TAPEFOLLOWER);

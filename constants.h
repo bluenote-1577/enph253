@@ -25,10 +25,14 @@ const unsigned long COLLISION_TURN_TIMER = 1300;
 const unsigned long INTERSECTION_WAIT_TIMER = 1000;
 const unsigned long PASSENGER_IR_THRESHOLD = 800;
 
+//PASSENGER TUNING
+const unsigned long SLOW_THRESHOLD = 400;
+const unsigned long	STOP_THRESHOLD = 800;
+const unsigned long FINAL_THRESHOLD = 600;
+const unsigned long SLOW_ROLLING_SPEED = 60;
+
 //SIGNAL PINS
 const unsigned long ARM_STOP_SWITCH = 8;
-const unsigned long LEFT_PASSENGER_IR = 0;
-const unsigned long RIGHT_PASSENGER_IR = 1;
 const unsigned long COLLISION_SWITCH = 0;
 const unsigned long LEFT_MOTOR = 0;
 const unsigned long RIGHT_MOTOR = 1;
@@ -40,9 +44,13 @@ const unsigned long RIGHT_INTERSECTION = 4;
 const unsigned long FRONT_INTERSECTION1 = 5;
 const unsigned long FRONT_INTERSECTION2 = 6;
 const unsigned long FRONT_INTERSECTION3 = 7;
-const unsigned long LEFT_DROPOFF_IR = 0;
-const unsigned long RIGHT_DROPOFF_IR = 1;
-const unsigned long FORWARD_DROPOFF_IR = 2;
+
+//IR PINS
+const unsigned long LEFT_PASSENGER_IR = 0;
+const unsigned long RIGHT_PASSENGER_IR = 2;
+const unsigned long LEFT_DROPOFF_IR = 1;
+const unsigned long RIGHT_DROPOFF_IR = 3;
+const unsigned long FORWARD_DROPOFF_IR = 4;
 
 //DETECTION STATES
 const unsigned long FOLLOWING_TAPE = 1;
